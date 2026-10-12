@@ -568,7 +568,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("#strip [data-iso
 /* ---------- boot ---------- */
 try{const saved=JSON.parse(localStorage.getItem("half-log-v2")||"{}");Object.assign(state,saved)}catch(_){}
 renderHome();enter();
-if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
+if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{})})}
 </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 // Offline support. The page itself is fetched fresh when online (so updates show up
 // on the next launch) and falls back to the cached copy offline; other files are
 // served from cache and refreshed in the background.
-const CACHE = "half-log-v2";
+const CACHE = "half-log-v3";
 const ASSETS = ["./", "index.html", "manifest.webmanifest", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -22,7 +22,7 @@ self.addEventListener("fetch", e => {
 
   if (req.mode === "navigate") {
     e.respondWith(
-      fetch(req)
+      fetch(req, { cache: "no-store" })
         .then(res => {
           const copy = res.clone();
           caches.open(CACHE).then(c => c.put("index.html", copy));
