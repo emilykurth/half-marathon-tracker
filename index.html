@@ -424,7 +424,7 @@ const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const S=k=>state[k]||(state[k]={c:{}});
 function progress(p){const c=(state[p.iso]||{}).c||{};const n=p.tasks.filter(t=>c[t.id]).length;return{n,total:p.tasks.length,pct:p.tasks.length?n/p.tasks.length*100:0}}
 const complete=p=>{const g=progress(p);return g.total>0&&g.n===g.total};
-function parseTime(t){if(!t)return null;const a=String(t).trim().split(":").map(Number);if(!a.length||a.some(isNaN))return null;let s=0;for(const x of a)s=s*60+x;return a.length===1?s*60:s}
+function parseTime(t){if(!t)return null;t=String(t).trim();if(!t.includes(":"))t=fmtTimeInput(t);if(!t.includes(":"))t="0:"+t;const a=t.split(":").map(Number);if(!a.length||a.some(isNaN))return null;let s=0;for(const x of a)s=s*60+x;return s}
 const fmt=s=>Math.floor(s/60)+":"+String(Math.round(s%60)).padStart(2,"0");
 
 /* ---------- home ---------- */
@@ -503,7 +503,7 @@ function renderDay(){
     el.querySelector("[data-count]").textContent=`${items.filter(t=>s.c[t.id]).length}/${items.length}`};
   sec("#secRun","run");sec("#secTrain","train");renderFood(p);
   if(document.activeElement!==$("#logMiles"))$("#logMiles").value=s.miles||"";
-  if(document.activeElement!==$("#logTime"))$("#logTime").value=s.time||"";
+  if(document.activeElement!==$("#logTime"))$("#logTime").value=s.time?fmtTimeInput(s.time):"";
   if(document.activeElement!==$("#dayNotes"))$("#dayNotes").value=s.notes||"";
   $("#logMiles").placeholder=p.mi||"0";
   const m=parseFloat(s.miles),sec2=parseTime(s.time);
@@ -551,7 +551,7 @@ $("#day").addEventListener("click",e=>{
   if(!was&&complete(p)){toast(p.race?"Half marathon done. Congratulations!":"Training day complete ✓");if(navigator.vibrate)try{navigator.vibrate(40)}catch(_){}}
 });
 ["logMiles","logTime","dayNotes"].forEach(id=>$("#"+id).addEventListener("change",e=>{
-  const f={logMiles:"miles",logTime:"time",dayNotes:"notes"}[id];S(current)[f]=e.target.value.trim();renderDay();save(current)}));
+  const f={logMiles:"miles",logTime:"time",dayNotes:"notes"}[id];let v=e.target.value.trim();if(f==="time")v=fmtTimeInput(v);S(current)[f]=v;renderDay();save(current)}));
 
 
 document.addEventListener("toggle",e=>{if(e.target.classList&&e.target.classList.contains("mealsbox"))mealsOpen=e.target.open},true);
