@@ -232,8 +232,8 @@ img{max-width:100%}
 
 /* gradient scrolls with the page: lighter at the top, deeper rose further down */
 :root{--deep:#8a2541}
-html{background:var(--deep)}
-body{background:linear-gradient(180deg,var(--top) 0%,var(--bottom) 55%,var(--deep) 100%);min-height:100vh}
+html{background:var(--top) linear-gradient(180deg,var(--top) 0%,var(--bottom) 55%,var(--deep) 100%) no-repeat;background-size:100% 100%;min-height:100%;overscroll-behavior-y:none}
+body{background:transparent;min-height:100vh;overscroll-behavior-y:none}
 body::before{display:none}
 </style>
 </head>
