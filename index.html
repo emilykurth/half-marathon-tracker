@@ -68,10 +68,14 @@ button{font-family:var(--font);color:inherit}
 .grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
 .dow{text-align:center;font-size:12px;font-weight:600;color:var(--muted)}
 .wk{display:none}
-.cell{position:relative;aspect-ratio:1/1;max-width:100%;border:0;border-radius:50%;background:var(--tint);color:var(--plum);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;min-width:0;transition:transform .12s}
+.cell{position:relative;aspect-ratio:1/1;max-width:100%;border:0;border-radius:50%;background:var(--tint);color:var(--plum);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:0;min-width:0;transition:transform .12s}
 .cell:active{transform:scale(.94)}
-.cell .m,.cell .lab{display:none}
-.cell .d{font-weight:600;font-size:15px;line-height:1}
+.cell .m{display:none}
+.cell .lab{display:block;font-size:8.5px;font-weight:600;line-height:1;color:var(--muted);white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+.cell.run .lab{color:var(--pink-ink)}
+.cell.complete .lab,.cell.race .lab{color:#fff}
+.cell.today .lab{color:var(--plum)}
+.cell .d{font-weight:700;font-size:15px;line-height:1}
 .cell.key{background:var(--tint-2)}
 .cell.past:not(.complete){opacity:.55}
 .cell.today{background:#fff;box-shadow:inset 0 0 0 2px var(--plum);opacity:1}
@@ -168,7 +172,7 @@ textarea{min-height:80px;resize:vertical}
 .screen.enter{animation:pageIn .32s ease-out both}
 .screen.leaving{animation:pageOut .22s ease-in both;pointer-events:none}
 @media (prefers-reduced-motion:reduce){.screen.enter,.screen.leaving{animation:none}*{transition:none!important}}
-@media (max-width:370px){.big{font-size:92px}.dayhero h1{font-size:38px}.cell .d{font-size:13px}.grid{gap:6px}}
+@media (max-width:370px){.big{font-size:92px}.dayhero h1{font-size:38px}.cell .d{font-size:13px}.cell .lab{font-size:7.5px}.grid{gap:5px}}
 </style>
 </head>
 <body>
