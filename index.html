@@ -302,7 +302,7 @@ until the race</div>
   <section class="sec" id="secRun"><div class="sec-h"><h2>Run</h2><span data-count></span></div><div data-list></div>
     <div class="log" id="runLog">
       <label for="logMiles">Actual miles<input id="logMiles" inputmode="decimal" placeholder="0"></label>
-      <label for="logTime">Time (h:mm:ss)<input id="logTime" inputmode="numeric" placeholder="e.g. 48:30"></label>
+      <label for="logTime">Time<input id="logTime" inputmode="numeric" placeholder="Type 4830 for 48:30" autocomplete="off"></label>
       <div class="pace" id="logPace"></div>
     </div>
   </section>
@@ -578,6 +578,15 @@ function renderWeek(){
 }
 document.addEventListener("click",e=>{const b=e.target.closest("#strip [data-iso], #wlist [data-iso]");if(b)openDay(b.dataset.iso)});
 
+
+/* time box: the phone number pad has no colon, so add colons as digits are typed */
+function fmtTimeInput(v){
+  const d=String(v).replace(/\D/g,"").replace(/^0+(?=\d{3})/,"").slice(0,6);
+  if(d.length<=2)return d;
+  if(d.length<=4)return d.slice(0,-2)+":"+d.slice(-2);
+  return d.slice(0,-4)+":"+d.slice(-4,-2)+":"+d.slice(-2);
+}
+$("#logTime").addEventListener("input",e=>{const f=fmtTimeInput(e.target.value);if(f!==e.target.value)e.target.value=f});
 /* ---------- boot ---------- */
 try{const saved=JSON.parse(localStorage.getItem("half-log-v2")||"{}");Object.assign(state,saved)}catch(_){}
 renderHome();enter();
