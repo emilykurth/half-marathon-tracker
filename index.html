@@ -550,8 +550,17 @@ $("#day").addEventListener("click",e=>{
   renderDay();save(current);
   if(!was&&complete(p)){toast(p.race?"Half marathon done. Congratulations!":"Training day complete ✓");if(navigator.vibrate)try{navigator.vibrate(40)}catch(_){}}
 });
-["logMiles","logTime","dayNotes"].forEach(id=>$("#"+id).addEventListener("change",e=>{
-  const f={logMiles:"miles",logTime:"time",dayNotes:"notes"}[id];let v=e.target.value.trim();if(f==="time")v=fmtTimeInput(v);S(current)[f]=v;renderDay();save(current)}));
+/* save the run log and notes on every keystroke (iPhone doesn't always fire "change"), and refresh the pace live */
+function logField(id,e){
+  if(!current)return;
+  const f={logMiles:"miles",logTime:"time",dayNotes:"notes"}[id];
+  let v=e.target.value;
+  if(f==="time"){const t=fmtTimeInput(v);if(t!==v){e.target.value=t;v=t}}
+  v=v.trim();
+  if((S(current)[f]||"")===v)return;
+  S(current)[f]=v;renderDay();save(current);
+}
+["logMiles","logTime","dayNotes"].forEach(id=>["input","change","blur"].forEach(ev=>$("#"+id).addEventListener(ev,e=>logField(id,e))));
 
 
 document.addEventListener("toggle",e=>{if(e.target.classList&&e.target.classList.contains("mealsbox"))mealsOpen=e.target.open},true);
@@ -586,7 +595,6 @@ function fmtTimeInput(v){
   if(d.length<=4)return d.slice(0,-2)+":"+d.slice(-2);
   return d.slice(0,-4)+":"+d.slice(-4,-2)+":"+d.slice(-2);
 }
-$("#logTime").addEventListener("input",e=>{const f=fmtTimeInput(e.target.value);if(f!==e.target.value)e.target.value=f});
 /* ---------- boot ---------- */
 try{const saved=JSON.parse(localStorage.getItem("half-log-v2")||"{}");Object.assign(state,saved)}catch(_){}
 renderHome();enter();
