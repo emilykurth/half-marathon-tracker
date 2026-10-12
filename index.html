@@ -229,6 +229,12 @@ img{max-width:100%}
 .topbar #back{grid-column:1;justify-self:start}
 .topbar .t{grid-column:2;flex:none;padding-inline:4px}
 .topbar #todayBtn{grid-column:3;justify-self:end}
+
+/* gradient scrolls with the page: lighter at the top, deeper rose further down */
+:root{--deep:#8a2541}
+html{background:var(--deep)}
+body{background:linear-gradient(180deg,var(--top) 0%,var(--bottom) 55%,var(--deep) 100%);min-height:100vh}
+body::before{display:none}
 </style>
 </head>
 <body>
