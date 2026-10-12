@@ -216,6 +216,12 @@ body::after{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area-
 *{box-sizing:border-box}
 img{max-width:100%}
 [hidden]{display:none!important}
+
+/* page transitions */
+@keyframes pageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.screen.enter{animation:pageIn .32s ease-out both}
+.screen.leaving{opacity:0;transform:translateY(-4px);transition:opacity .16s ease-in,transform .16s ease-in}
+@media (prefers-reduced-motion:reduce){.screen.enter{animation:none}.screen.leaving{transition:none}}
 </style>
 </head>
 <body>
@@ -479,8 +485,17 @@ function renderDay(){
   const i=P.indexOf(p);$("#prevDay").disabled=i===0;$("#nextDay").disabled=i===P.length-1;
   $("#todayBtn").hidden=!byIso[todayIso()]||p.iso===todayIso();
 }
-function openDay(k){current=k;$("#home").hidden=true;$("#day").hidden=false;renderDay();window.scrollTo(0,0);try{history.pushState({day:k},"")}catch(_){}}
-function goHome(push){current=null;$("#day").hidden=true;$("#home").hidden=false;renderHome();window.scrollTo(0,0)}
+const reduceMotion=()=>window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+function enter(){const el=document.querySelector(".screen:not([hidden])");if(!el||reduceMotion())return;el.classList.remove("enter");void el.offsetWidth;el.classList.add("enter")}
+let swapping=false;
+function swap(fn){const cur=document.querySelector(".screen:not([hidden])");
+  if(!cur||reduceMotion()){fn();return}
+  if(swapping)return;swapping=true;cur.classList.add("leaving");
+  setTimeout(()=>{cur.classList.remove("leaving");fn();enter();swapping=false},160)}
+function openDay(k){swap(()=>_openDay(k))}
+function goHome(push){swap(()=>_goHome(push))}
+function _openDay(k){current=k;$("#home").hidden=true;$("#day").hidden=false;renderDay();window.scrollTo(0,0);try{history.pushState({day:k},"")}catch(_){}}
+function _goHome(push){current=null;$("#day").hidden=true;$("#home").hidden=false;renderHome();window.scrollTo(0,0)}
 window.addEventListener("popstate",()=>{if(current)goHome()});
 
 /* ---------- saving ---------- */
@@ -497,9 +512,9 @@ let toastT;function toast(t){const el=$("#toast");el.textContent=t;el.classList.
 $("#grid").addEventListener("click",e=>{const b=e.target.closest("button.cell");if(b)openDay(b.dataset.iso)});
 $("#todayCard").addEventListener("click",()=>{const k=$("#todayCard").dataset.iso;if(k)openDay(k)});
 $("#back").addEventListener("click",()=>{goHome()});
-$("#todayBtn").addEventListener("click",()=>{current=todayIso();renderDay();window.scrollTo(0,0)});
-$("#prevDay").addEventListener("click",()=>{const i=P.findIndex(p=>p.iso===current);if(i>0){current=P[i-1].iso;renderDay();window.scrollTo(0,0)}});
-$("#nextDay").addEventListener("click",()=>{const i=P.findIndex(p=>p.iso===current);if(i<P.length-1){current=P[i+1].iso;renderDay();window.scrollTo(0,0)}});
+$("#todayBtn").addEventListener("click",()=>swap(()=>{current=todayIso();renderDay();window.scrollTo(0,0)}));
+$("#prevDay").addEventListener("click",()=>{const i=P.findIndex(p=>p.iso===current);if(i>0)swap(()=>{current=P[i-1].iso;renderDay();window.scrollTo(0,0)})});
+$("#nextDay").addEventListener("click",()=>{const i=P.findIndex(p=>p.iso===current);if(i<P.length-1)swap(()=>{current=P[i+1].iso;renderDay();window.scrollTo(0,0)})});
 $("#day").addEventListener("click",e=>{
   const p=byIso[current];if(!p)return;const s=S(current),was=complete(p);
   const b=e.target.closest("[data-task]");if(!b)return;const id=b.dataset.task;
@@ -538,7 +553,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("#strip [data-iso
 
 /* ---------- boot ---------- */
 try{const saved=JSON.parse(localStorage.getItem("half-log-v2")||"{}");Object.assign(state,saved)}catch(_){}
-renderHome();
+renderHome();enter();
 if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
 </script>
 </body>
