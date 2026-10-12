@@ -39,13 +39,13 @@ button{font-family:var(--font);color:inherit}
 /* ---------- home ---------- */
 .hero{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:6px;isolation:isolate}
 .sky{position:absolute;left:-22px;right:-22px;top:-6px;height:300px;z-index:-1;pointer-events:none;overflow:hidden}
-.sun{position:absolute;left:58px;top:70px;width:104px;height:104px;border-radius:50%;background:var(--cloud);opacity:.7}
-.cloud{position:absolute;left:0;fill:var(--cloud);height:auto;animation:drift linear infinite;will-change:transform}
-.c1{top:84px;width:250px;opacity:.6;animation-duration:150s;animation-delay:-40s;--x:150px}
-.c2{top:150px;width:170px;opacity:.32;animation-duration:200s;animation-delay:-60s;animation-direction:reverse;--x:250px}
-.c3{top:206px;width:215px;opacity:.48;animation-duration:170s;animation-delay:-120s;--x:-30px}
-.c4{top:246px;width:120px;opacity:.26;animation-duration:140s;animation-delay:-30s;animation-direction:reverse;--x:290px}
-.c5{top:62px;width:92px;opacity:.38;animation-duration:180s;animation-delay:-150s;animation-direction:reverse;--x:310px}
+.sun{position:absolute;left:58px;top:70px;width:104px;height:104px;border-radius:50%;background:#d6738f;z-index:0}
+.cloud{position:absolute;left:0;height:auto;animation:drift linear infinite;will-change:transform}
+.c1{top:84px;width:250px;fill:#d06b89;z-index:5;animation-duration:150s;animation-delay:-40s;--x:150px}
+.c2{top:150px;width:170px;fill:#de90a7;z-index:2;animation-duration:200s;animation-delay:-60s;animation-direction:reverse;--x:250px}
+.c3{top:206px;width:215px;fill:#d67b96;z-index:4;animation-duration:170s;animation-delay:-120s;--x:-30px}
+.c4{top:246px;width:120px;fill:#e299ae;z-index:1;animation-duration:140s;animation-delay:-30s;animation-direction:reverse;--x:290px}
+.c5{top:62px;width:92px;fill:#da86a0;z-index:3;animation-duration:180s;animation-delay:-150s;animation-direction:reverse;--x:310px}
 @keyframes drift{from{transform:translateX(-260px)}to{transform:translateX(500px)}}
 @media (prefers-reduced-motion:reduce){.cloud{animation:none;transform:translateX(var(--x))}}
 .hello{font-size:15px;letter-spacing:.1em;text-transform:uppercase}
