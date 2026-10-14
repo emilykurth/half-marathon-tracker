@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Sydney Half Training Log</title>
-<meta name="theme-color" content="#e5a1b6">
+<meta name="theme-color" content="#dc8fa7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -262,7 +262,7 @@ textarea{min-height:80px;resize:vertical}
 /* first open: home builds itself top to bottom, calendar tiles cascade diagonally */
 @keyframes rise{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:none}}
 @keyframes tileIn{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:none}}
-.intro .hero>*:not(.sky),.intro .weekline,.intro .todaycard,.intro .stats,.intro .legend,.intro .sync{animation:rise .7s var(--spring) both;animation-delay:calc(var(--i,0) * 70ms)}
+.intro .hero>*:not(.sky),.intro .upnext,.intro .todaycard,.intro .stats,.intro .legend,.intro .sync{animation:rise .7s var(--spring) both;animation-delay:calc(var(--i,0) * 70ms)}
 .intro .cell:not(.empty),.intro .dow{animation:tileIn .55s var(--spring) both;animation-delay:calc(380ms + var(--t,0) * 28ms)}
 .intro .cell.past:not(.complete){animation-name:tileInPast}
 @keyframes tileInPast{from{opacity:0;transform:scale(.82)}to{opacity:.6;transform:none}}
@@ -325,7 +325,72 @@ textarea{min-height:80px;resize:vertical}
   .screen.enter,.screen.leaving,.intro *,.sky .sun,.task.just .box,.task.just .box::after,.stat .num.bump,.cell.justdone,.cell.justdone::after,.chip.ok.fresh,.mealsbox[open] .fitem{animation:none!important}
   *{transition:none!important}
 }
-@media (max-width:370px){.big{font-size:124px}.todaycard h3{font-size:31px}.tcmi{font-size:62px}.cell .d{font-size:19px}.cell .lab{font-size:8.5px}.grid{gap:5px}.ddate{font-size:34px}}
+/* ---------- readability pass ----------
+   White type stays on the sky, with a soft rose halo so it holds up on the light top of the
+   gradient. Text that has to be read at small sizes sits on a solid card. Today's card is the one
+   white surface on the page; the calendar tells day types apart by fill, not just tint. */
+:root{--top:#dc8fa7;--ink:#b03a5c;--muted:#8f4a63;--halo:0 1px 2px rgba(122,31,59,.35),0 0 16px rgba(122,31,59,.28)}
+.hero,.legend,.sync,.weekline,.dow,.ddate,.kick,.dayhero h1,.dsub,#dProg,.note{text-shadow:var(--halo)}
+.hello{font-size:16px;font-weight:700;letter-spacing:.12em}
+#hCountLbl{font-size:16px;font-weight:700}
+
+/* today: the one solid white card */
+.todaycard{background:#fff;color:var(--ink-deep);box-shadow:0 10px 30px rgba(120,20,50,.16)}
+.todaycard .eyebrow{color:var(--ink);font-size:15px;letter-spacing:.1em;text-transform:uppercase}
+.todaycard p{color:var(--muted)}
+.todaycard .tcmi{color:var(--ink)}
+.todaycard .prog .bar{background:#f3d0db}
+.todaycard .prog .bar i{background:var(--ink)}
+#tcProg{color:var(--muted)}
+
+/* coming up */
+.upnext{display:flex;flex-direction:column;gap:10px}
+.weekline{margin:0;text-align:left;font-size:15px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.wlist{display:flex;flex-direction:column;gap:8px}
+.wcard{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:14px;width:100%;padding:12px 16px;border:0;border-radius:12px;background:var(--card);color:var(--ink-deep);text-align:left;cursor:pointer;font-family:var(--font);transition:transform .45s var(--pop)}
+.wcard:active{transform:scale(.98);transition-duration:.1s;transition-timing-function:ease-out}
+.wd{display:flex;flex-direction:column;align-items:center;line-height:1.1;color:var(--ink)}
+.wd b{font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.wd .num{font-size:22px;font-family:var(--num)}
+.wbody{display:flex;flex-direction:column;min-width:0}
+.wt{font-weight:700;font-size:17px;line-height:1.2}
+.wx{font-size:14px;color:var(--muted)}
+.wm{font-family:var(--num);font-size:30px;line-height:1;color:var(--ink)}
+.wm small{font-size:16px;margin-left:2px}
+.wcard.iskey{background:var(--btn);color:#fff}
+.wcard.iskey .wd,.wcard.iskey .wx,.wcard.iskey .wm{color:#fff}
+.wcard.isdone{opacity:.7}
+
+/* stats: lighter so they don't compete with today */
+.stats{background:var(--card-2);padding:16px 10px}
+.stat .num{font-size:30px;color:var(--ink)}
+.stat .lbl{font-size:14px;color:var(--muted)}
+
+/* calendar: readable labels, distinct day types */
+.cell{color:var(--ink-deep)}
+.cell .lab{font-size:10.5px;letter-spacing:0;text-transform:none;font-weight:700}
+.cell.key,.cell.race{background:var(--btn);color:#fff}
+.cell.race{background:var(--ink-deep)}
+.cell.today{border:0;background:var(--card);color:var(--ink-deep);box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink-deep)}
+.cell.today.key{background:var(--btn);color:#fff}
+.cell.today .lab{color:inherit}
+.cell.past:not(.complete){opacity:1;background:transparent;border:2px dashed rgba(255,255,255,.75);color:#fff;text-shadow:var(--halo)}
+.cell.complete,.cell.today.complete{background:#fff;color:var(--ink-deep)}
+.cell .ring{background:conic-gradient(currentColor calc(var(--p)*1%),rgba(255,255,255,.5) 0)}
+.intro .cell.past:not(.complete){animation-name:tileIn}
+.legend{font-size:14px}
+.legend .lg-today{border:0;background:var(--card);box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--ink-deep)}
+.legend .lg-key{background:var(--btn)}
+.legend .lg-key,.legend .lg-reg,.legend .lg-done{box-shadow:0 0 0 1.5px rgba(255,255,255,.85)}
+.legend .lg-past{border:1.5px dashed #fff}
+.sync{font-size:13px;opacity:1}
+
+/* day page: readable secondary text on the cards */
+.sec-h span{color:var(--muted)}
+.burst{width:20px;height:20px}
+
+@media (max-width:370px){.cell .lab{font-size:9.5px}.wcard{gap:10px;padding:10px 12px}}
+@media (max-width:370px){.big{font-size:124px}.todaycard h3{font-size:31px}.tcmi{font-size:62px}.cell .d{font-size:19px}.cell .lab{font-size:9.5px}.grid{gap:5px}.ddate{font-size:34px}}
 </style>
 </head>
 <body>
@@ -339,8 +404,6 @@ textarea{min-height:80px;resize:vertical}
     <div id="hCountLbl">days
 until the race</div>
   </header>
-  <p class="weekline">What's on for training this week.</p>
-
   <button type="button" class="todaycard" id="todayCard">
     <span class="eyebrow" id="tcEyebrow">Today's Plan</span>
     <div class="tcrow"><div><h3 id="tcTitle">–</h3><p id="tcSub"></p></div><span class="tcmi num" id="tcMi"></span></div>
@@ -348,10 +411,15 @@ until the race</div>
     <div class="tcfoot"><span class="open">Open today</span><span id="tcProg">0 of 0 done</span></div>
   </button>
 
+  <section class="upnext" aria-labelledby="upHead">
+    <h2 class="weekline" id="upHead">Coming up</h2>
+    <div class="wlist" id="wlist"></div>
+  </section>
+
   <section class="stats" aria-label="Progress">
-    <div class="stat"><div class="num" id="sDays">0</div><div class="lbl">Days complete</div></div>
-    <div class="stat"><div class="num" id="sMiles">0</div><div class="lbl">Miles run</div></div>
-    <div class="stat"><div class="num" id="sStreak">0</div><div class="lbl">Day streak</div></div>
+    <div class="stat"><div class="num" id="sDays">0</div><div class="lbl" id="sDaysLbl">days complete</div></div>
+    <div class="stat"><div class="num" id="sMiles">0</div><div class="lbl">miles run</div></div>
+    <div class="stat"><div class="num" id="sStreak">0</div><div class="lbl">day streak</div></div>
   </section>
 
   <section class="cal" aria-label="Training calendar">
@@ -362,6 +430,7 @@ until the race</div>
       <span><i class="lg-key"></i>Key session</span>
       <span><i class="lg-reg"></i>Regular session</span>
       <span><i class="lg-done"></i>Complete</span>
+      <span><i class="lg-past"></i>Missed</span>
     </div>
   </section>
   <div class="sync" id="sync">Saved on this phone</div>
@@ -530,7 +599,7 @@ function renderHome(){
   // stats
   let days=0,miles=0;P.forEach(p=>{if(complete(p))days++;const s=state[p.iso]||{};const am=parseFloat(s.miles);if(!isNaN(am))miles+=am;else if(p.mi&&s.c&&s.c["r-run"])miles+=p.mi});
   let streak=0;for(let i=P.length-1;i>=0;i--){const p=P[i];if(p.iso>todayIso())continue;if(complete(p))streak++;else if(p.iso===todayIso())continue;else break}
-  countTo($("#sDays"),days,{suffix:"/"+P.length});countTo($("#sMiles"),Math.round(miles*10)/10,{dec:1});countTo($("#sStreak"),streak);
+  countTo($("#sDays"),days);$("#sDaysLbl").textContent=`of ${P.length} days done`;countTo($("#sMiles"),Math.round(miles*10)/10,{dec:1});countTo($("#sStreak"),streak);
   // calendar: Monday-first tiles, from the first Monday of the block
   const DOWM=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
   let h=DOWM.map((d,i)=>`<div class="dow" style="--t:${i}">${d}</div>`).join(""),n=0;
@@ -573,7 +642,7 @@ function renderDay(){
   $("#dBarTitle").textContent=`${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}`;
   const rel=p.iso===todayIso()?`<span class="chip acc">Today</span>`:"";
   const daysTo=Math.round((new Date(2026,10,1)-d)/864e5);
-  $("#dChips").innerHTML=`${rel}<span class="chip">${esc(p.type)}</span>${p.mi?`<span class="chip">${p.mi} mi planned</span>`:""}${daysTo>0?`<span class="chip">${daysTo} days to race</span>`:""}${done?`<span class="chip ok">Complete</span>`:""}`;
+  $("#dChips").innerHTML=`${rel}<span class="chip">${esc(p.type)}</span>${p.mi?`<span class="chip">${p.mi} mi</span>`:""}${daysTo>0?`<span class="chip">${daysTo} ${daysTo===1?"day":"days"} out</span>`:""}${done?`<span class="chip ok">Complete</span>`:""}`;
   $("#dTitle").textContent=TYPEL[p.type]||p.title;
   $("#dDate").textContent=`${DOWL[d.getDay()]} ${MON[d.getMonth()]} ${d.getDate()}`;
   $("#dKick").textContent=p.iso===todayIso()?"Today's plan":"The plan";
@@ -633,7 +702,7 @@ function burst(from){
   if(reduceMotion()||!from||!from.animate)return;
   const r=from.getBoundingClientRect(),x=r.left+r.width*Math.min(1,parseFloat(from.style.width)/100||1),y=r.top+r.height/2;
   for(let i=0;i<12;i++){
-    const h=document.createElement("i");h.className="burst"+(i%3===0?" pk":"");document.body.appendChild(h);
+    const h=document.createElement("i");h.className="burst"+(i%3?" pk":"");document.body.appendChild(h);
     const a=-Math.PI/2+(Math.random()-.5)*Math.PI*1.3,d=60+Math.random()*70,s=.55+Math.random()*.7,rot=(Math.random()-.5)*70;
     const dx=Math.cos(a)*d,dy=Math.sin(a)*d;
     h.animate([
@@ -693,20 +762,16 @@ function extraLabel(p){const t=p.train.map(x=>x.t);
   if(t.some(x=>/mobility/i.test(x)))return "+ Hip mobility";
   if(p.run)return "+ Stretching";
   if(t.some(x=>/Walk/.test(x)))return "+ Walk";return ""}
+/* the next three days after today */
 function renderWeek(){
-  if(!$("#strip"))return;
-  const t=todayIso(),base=t<P[0].iso?parse(P[0].iso):parse(t);
-  let strip="";
-  for(let i=0;i<7;i++){const d=new Date(base);d.setDate(d.getDate()+i);const k=iso(d),p=byIso[k];
-    strip+=`<div class="sd"><span class="sl">${DOW[d.getDay()]}</span>${p?`<button type="button" class="tile${k===t?" today":""}${complete(p)?" done":""}" data-iso="${k}" aria-label="${DOWL[d.getDay()]} ${d.getDate()}: ${esc(p.title)}">${d.getDate()}</button>`:`<span class="tile blank" aria-hidden="true"></span>`}</div>`}
-  $("#strip").innerHTML=strip;
-  const up=P.filter(p=>p.iso>t).slice(0,3);
-  $("#wlist").innerHTML=up.length?up.map(p=>{const d=parse(p.iso);return `<button type="button" class="wcard glass${complete(p)?" isdone":""}" data-iso="${p.iso}">
-    <span class="wd">${DOWL[d.getDay()]}</span>
-    <span><span class="wt" style="display:block">${esc(TYPEL[p.type]||p.title)}</span><span class="wx" style="display:block">${esc(extraLabel(p))}</span></span>
-    ${p.mi?`<span class="wm num">${p.race?"13.1":p.mi===2?"20":p.mi}<small>${p.mi===2?"min":"mi"}</small></span>`:`<span></span>`}</button>`}).join(""):"";
+  const t=todayIso(),from=t<P[0].iso?P[0].iso:t,up=P.filter(p=>p.iso>from).slice(0,3);
+  $(".upnext").hidden=!up.length;
+  $("#wlist").innerHTML=up.map(p=>{const d=parse(p.iso);return `<button type="button" class="wcard${p.key?" iskey":""}${complete(p)?" isdone":""}" data-iso="${p.iso}" aria-label="${DOWL[d.getDay()]} ${d.getDate()} ${MONL[d.getMonth()]}: ${esc(p.title)}">
+    <span class="wd"><b>${DOW[d.getDay()]}</b><span class="num">${d.getDate()}</span></span>
+    <span class="wbody"><span class="wt">${esc(TYPEL[p.type]||p.title)}</span><span class="wx">${esc(extraLabel(p).replace(/^\+ /,"with "))}</span></span>
+    ${p.mi?`<span class="wm num">${p.race?"13.1":p.mi===2?"20":p.mi}<small>${p.mi===2?"min":"mi"}</small></span>`:`<span></span>`}</button>`}).join("");
 }
-document.addEventListener("click",e=>{const b=e.target.closest("#strip [data-iso], #wlist [data-iso]");if(b)openDay(b.dataset.iso)});
+document.addEventListener("click",e=>{const b=e.target.closest("#wlist [data-iso]");if(b)openDay(b.dataset.iso)});
 
 
 /* time box: the phone number pad has no colon, so add colons as digits are typed */
@@ -718,11 +783,14 @@ function fmtTimeInput(v){
 }
 /* ---------- boot ---------- */
 try{const saved=JSON.parse(localStorage.getItem("half-log-v2")||"{}");Object.assign(state,saved)}catch(_){}
-/* first open: stagger the home screen in */
-if(!reduceMotion()){const home=$("#home");home.classList.add("intro");
-  [...home.querySelectorAll(".hero>*:not(.sky)"),$(".weekline"),$("#todayCard"),$(".stats"),$(".legend"),$("#sync")].forEach((el,i)=>el.style.setProperty("--i",i));
-  setTimeout(()=>home.classList.remove("intro"),2000)}
-renderHome();
+/* first open of the day: stagger the home screen in; later opens just fade up */
+let introDay=null;try{introDay=localStorage.getItem("half-log-intro")}catch(_){}
+if(!reduceMotion()&&introDay!==todayIso()){const home=$("#home");home.classList.add("intro");
+  [...home.querySelectorAll(".hero>*:not(.sky)"),$("#todayCard"),$(".upnext"),$(".stats"),$(".legend"),$("#sync")].forEach((el,i)=>el.style.setProperty("--i",i));
+  setTimeout(()=>home.classList.remove("intro"),2000);
+  try{localStorage.setItem("half-log-intro",todayIso())}catch(_){}
+  renderHome();
+}else{renderHome();enter()}
 if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{})})}
 </script>
 </body>
