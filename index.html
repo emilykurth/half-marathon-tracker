@@ -168,7 +168,7 @@ textarea{min-height:80px;resize:vertical}
 #nextDay{background:var(--btn)}
 .daynav .iconbtn:disabled{opacity:.35;cursor:default}
 
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,160%);visibility:hidden;background:#fff;color:var(--ink);padding:12px 20px;border-radius:999px;font-weight:700;box-shadow:0 8px 28px rgba(120,20,50,.25);transition:transform .3s;z-index:20;max-width:calc(100% - 32px);text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,160%);visibility:hidden;background:#fff;color:var(--ink);padding:12px 20px;border-radius:999px;font-weight:700;box-shadow:0 8px 28px rgba(120,20,50,.25);transition:transform .3s;z-index:20;width:max-content;max-width:calc(100% - 32px);text-align:center}
 .toast.show{transform:translate(-50%,0);visibility:visible}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
@@ -238,11 +238,93 @@ textarea{min-height:80px;resize:vertical}
 /* completed days: date + heart in place of the run label */
 .cell.complete,.cell.today.complete{background:#fff;color:var(--ink-deep)}
 .cell.complete .lab{display:none}
-@keyframes pageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-@keyframes pageOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-4px)}}
-.screen.enter{animation:pageIn .32s ease-out both}
-.screen.leaving{animation:pageOut .22s ease-in both;pointer-events:none}
-@media (prefers-reduced-motion:reduce){.screen.enter,.screen.leaving{animation:none}*{transition:none!important}}
+/* ---------- motion ----------
+   Springs settle with a small overshoot instead of easing to a stop; everything is
+   transform/opacity so it stays smooth on iPhone, and all of it is off under reduced motion. */
+:root{
+  --spring:cubic-bezier(.3,1.25,.5,1);        /* gentle settle, for movement and bars */
+  --pop:cubic-bezier(.34,1.6,.6,1);           /* livelier, for checks, hearts, presses */
+  --out:cubic-bezier(.22,1,.36,1);
+}
+@supports (transition-timing-function:linear(0,1)){:root{
+  --spring:linear(0,.065,.208,.376,.537,.676,.787,.871,.93,.969,.993,1.007,1.013,1.015,1.014,1.012,1.01,1.007,1.005,1.003,1.002,1.001,1.001,1);
+  --pop:linear(0,.065,.221,.417,.616,.793,.933,1.032,1.093,1.122,1.125,1.113,1.091,1.065,1.041,1.02,1.004,.993,.987,.984,.985,.987,.99,.993,.996,.998,1);
+}}
+
+/* page changes: rise in, drift sideways when stepping between days */
+@keyframes pageIn{from{opacity:0;transform:translate3d(var(--dx,0),var(--dy,10px),0)}to{opacity:1;transform:none}}
+@keyframes pageOut{from{opacity:1;transform:none}to{opacity:0;transform:translate3d(calc(var(--dx,0) * -.6),var(--dy-out,-4px),0)}}
+.screen.enter{animation:pageIn .5s var(--spring) both}
+.screen.leaving{animation:pageOut .18s ease-in both;pointer-events:none}
+.screen.fwd{--dx:28px;--dy:0;--dy-out:0}
+.screen.back{--dx:-28px;--dy:0;--dy-out:0}
+
+/* first open: home builds itself top to bottom, calendar tiles cascade diagonally */
+@keyframes rise{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:none}}
+@keyframes tileIn{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:none}}
+.intro .hero>*:not(.sky),.intro .weekline,.intro .todaycard,.intro .stats,.intro .legend,.intro .sync{animation:rise .7s var(--spring) both;animation-delay:calc(var(--i,0) * 70ms)}
+.intro .cell:not(.empty),.intro .dow{animation:tileIn .55s var(--spring) both;animation-delay:calc(380ms + var(--t,0) * 28ms)}
+.intro .cell.past:not(.complete){animation-name:tileInPast}
+@keyframes tileInPast{from{opacity:0;transform:scale(.82)}to{opacity:.6;transform:none}}
+.sky .sun{animation:sunUp 1.4s var(--out) both}
+@keyframes sunUp{from{transform:translateY(26px);opacity:0}to{transform:none;opacity:1}}
+
+/* tactile presses: sink a touch on press, spring back on release */
+.todaycard,.iconbtn,.cell,.open,.mealsbox summary{transition:transform .45s var(--pop)}
+.todaycard:active{transform:scale(.975);transition-duration:.12s;transition-timing-function:ease-out}
+.iconbtn:active{transform:scale(.94);transition-duration:.1s;transition-timing-function:ease-out}
+.cell:active{transform:scale(.92);transition-duration:.1s;transition-timing-function:ease-out}
+.task{transition:transform .45s var(--pop)}
+.task:active{transform:scale(.985);transition-duration:.1s;transition-timing-function:ease-out}
+.daynav .iconbtn:disabled:active{transform:none}
+
+/* progress bars fill with a spring */
+.prog .bar i{transition:width .8s var(--spring)}
+
+/* ticking a task: box pops, tick draws on */
+@keyframes boxPop{0%{transform:scale(.7)}100%{transform:scale(1)}}
+@keyframes tickDraw{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes untick{0%{transform:scale(.88)}100%{transform:scale(1)}}
+.task.just[aria-checked="true"] .box{animation:boxPop .5s var(--pop)}
+.task.just[aria-checked="true"] .box::after{animation:tickDraw .28s .06s ease-out both}
+.task.just[aria-checked="false"] .box{animation:untick .35s var(--spring)}
+.task .tname{transition:opacity .3s}
+
+/* stat numbers bump when they change */
+@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.14)}100%{transform:scale(1)}}
+.stat .num{display:inline-block;align-self:center}
+.stat .num.bump{animation:bump .6s var(--pop)}
+
+/* a day just finished: its calendar tile pops and the heart lands */
+@keyframes cellDone{0%{transform:scale(.8)}100%{transform:scale(1)}}
+@keyframes heartIn{0%{transform:scale(0) rotate(-20deg)}100%{transform:none}}
+.cell.justdone{animation:cellDone .6s .25s var(--pop) both}
+.cell.justdone::after{animation:heartIn .6s .4s var(--pop) both}
+
+/* "Complete" chip and the day note */
+@keyframes chipIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+.chip.ok.fresh{animation:chipIn .5s var(--pop) both}
+
+/* meal ideas: contents fade in as the section opens */
+.mealsbox[open] .fitem{animation:rise .45s var(--spring) both}
+.mealsbox[open] .fitem:nth-of-type(2){animation-delay:30ms}
+.mealsbox[open] .fitem:nth-of-type(3){animation-delay:60ms}
+.mealsbox[open] .fitem:nth-of-type(4){animation-delay:90ms}
+.mealsbox[open] .fitem:nth-of-type(n+5){animation-delay:120ms}
+.mealsbox summary::after{transition:transform .45s var(--pop)}
+
+/* toast springs up */
+.toast{transition:transform .55s var(--pop),visibility 0s .55s}
+.toast.show{transition:transform .55s var(--pop),visibility 0s}
+
+/* celebration hearts (spawned from JS) */
+.burst{position:fixed;left:0;top:0;width:16px;height:16px;pointer-events:none;z-index:25;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M12 20.6 10.6 19.3C5.6 14.8 2.3 11.8 2.3 8.1 2.3 5.1 4.7 2.8 7.6 2.8c1.7 0 3.3.8 4.4 2.1 1.1-1.3 2.7-2.1 4.4-2.1 2.9 0 5.3 2.3 5.3 5.3 0 3.7-3.3 6.7-8.3 11.2L12 20.6z'/%3E%3C/svg%3E") center/contain no-repeat;will-change:transform,opacity}
+.burst.pk{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23b8405e' d='M12 20.6 10.6 19.3C5.6 14.8 2.3 11.8 2.3 8.1 2.3 5.1 4.7 2.8 7.6 2.8c1.7 0 3.3.8 4.4 2.1 1.1-1.3 2.7-2.1 4.4-2.1 2.9 0 5.3 2.3 5.3 5.3 0 3.7-3.3 6.7-8.3 11.2L12 20.6z'/%3E%3C/svg%3E")}
+
+@media (prefers-reduced-motion:reduce){
+  .screen.enter,.screen.leaving,.intro *,.sky .sun,.task.just .box,.task.just .box::after,.stat .num.bump,.cell.justdone,.cell.justdone::after,.chip.ok.fresh,.mealsbox[open] .fitem{animation:none!important}
+  *{transition:none!important}
+}
 @media (max-width:370px){.big{font-size:124px}.todaycard h3{font-size:31px}.tcmi{font-size:62px}.cell .d{font-size:19px}.cell .lab{font-size:8.5px}.grid{gap:5px}.ddate{font-size:34px}}
 </style>
 </head>
@@ -432,7 +514,7 @@ function renderHome(){
   const t=parse(todayIso()),race=new Date(2026,10,1),dd=Math.round((race-t)/864e5);
   $("#hToday").textContent=`${DOWL[t.getDay()]} ${t.getDate()} ${MONL[t.getMonth()]}`;
   renderWeek();
-  $("#hCount").textContent=dd>0?dd:(dd===0?"0":"✓");
+  if(dd>0)countTo($("#hCount"),dd);else $("#hCount").textContent=dd===0?"0":"✓";
   $("#hCountLbl").textContent=dd>1?"days\nuntil the race":dd===1?"day\nuntil the race":dd===0?"race day!":"race done";
   // today card
   const tp=byIso[todayIso()]||(todayIso()<P[0].iso?P[0]:null);
@@ -442,26 +524,26 @@ function renderHome(){
     $("#tcTitle").textContent=TYPEL[tp.type]||tp.title;
     $("#tcSub").textContent=extraLabel(tp).replace("Strength training","Strength training")||"";
     $("#tcMi").innerHTML=tp.mi?(tp.mi===2?`20<small>min</small>`:`${tp.mi}<small>mi</small>`):"";
-    $("#tcBar").style.width=g.pct+"%";$("#tcProg").textContent=complete(tp)?"Complete ✓":`${g.n} of ${g.total} done`;
+    fillBar($("#tcBar"),g.pct);$("#tcProg").textContent=complete(tp)?"Complete ✓":`${g.n} of ${g.total} done`;
     card.dataset.iso=tp.iso;card.querySelector(".open").textContent=complete(tp)?"Review day":"Open "+(tp.iso===todayIso()?"today":"day");
   } else card.hidden=true;
   // stats
   let days=0,miles=0;P.forEach(p=>{if(complete(p))days++;const s=state[p.iso]||{};const am=parseFloat(s.miles);if(!isNaN(am))miles+=am;else if(p.mi&&s.c&&s.c["r-run"])miles+=p.mi});
   let streak=0;for(let i=P.length-1;i>=0;i--){const p=P[i];if(p.iso>todayIso())continue;if(complete(p))streak++;else if(p.iso===todayIso())continue;else break}
-  $("#sDays").textContent=days+"/"+P.length;$("#sMiles").textContent=Math.round(miles*10)/10;$("#sStreak").textContent=streak;
+  countTo($("#sDays"),days,{suffix:"/"+P.length});countTo($("#sMiles"),Math.round(miles*10)/10,{dec:1});countTo($("#sStreak"),streak);
   // calendar: Monday-first tiles, from the first Monday of the block
   const DOWM=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  let h=DOWM.map(d=>`<div class="dow">${d}</div>`).join("");
+  let h=DOWM.map((d,i)=>`<div class="dow" style="--t:${i}">${d}</div>`).join(""),n=0;
   const start=parse("2026-10-12"),end=parse(P[P.length-1].iso);
   for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
-    const p=byIso[iso(d)];
+    const p=byIso[iso(d)],t=Math.floor(n/7)+n%7+1;n++;
     if(!p){h+=`<div class="cell empty"></div>`;continue}
-    const g=progress(p),cls=["cell",p.mi?"run":"",p.key?"key":"",p.iso===todayIso()?"today":"",p.iso<todayIso()?"past":"",complete(p)?"complete":"",p.race&&!complete(p)?"race":""].join(" ");
-    h+=`<button type="button" class="${cls}" data-iso="${p.iso}" aria-label="${DOWL[d.getDay()]} ${d.getDate()} ${MONL[d.getMonth()]}: ${esc(p.title)}${complete(p)?", complete":g.n?`, ${g.n} of ${g.total} done`:""}">
+    const g=progress(p),cls=["cell",justDone===p.iso&&complete(p)?"justdone":"",p.mi?"run":"",p.key?"key":"",p.iso===todayIso()?"today":"",p.iso<todayIso()?"past":"",complete(p)?"complete":"",p.race&&!complete(p)?"race":""].join(" ");
+    h+=`<button type="button" class="${cls}" style="--t:${t}" data-iso="${p.iso}" aria-label="${DOWL[d.getDay()]} ${d.getDate()} ${MONL[d.getMonth()]}: ${esc(p.title)}${complete(p)?", complete":g.n?`, ${g.n} of ${g.total} done`:""}">
       ${g.n&&!complete(p)?`<span class="ring" style="--p:${g.pct}"></span>`:""}
       <span class="d">${String(d.getDate()).padStart(2,"0")}</span><span class="lab">${esc(p.cal)}</span></button>`;
   }
-  $("#grid").innerHTML=h;
+  $("#grid").innerHTML=h;justDone=null;
 }
 
 /* ---------- day ---------- */
@@ -496,7 +578,7 @@ function renderDay(){
   $("#dDate").textContent=`${DOWL[d.getDay()]} ${MON[d.getMonth()]} ${d.getDate()}`;
   $("#dKick").textContent=p.iso===todayIso()?"Today's plan":"The plan";
   $("#dSub").textContent=p.race?"13.1 miles":p.mi?(p.mi===2?"15–20 minutes":p.mi+" miles"):p.title;
-  $("#dBar").style.width=g.pct+"%";$("#dProg").textContent=done?"All done — complete training day":`${g.n} of ${g.total} done`;
+  fillBar($("#dBar"),g.pct,shownIso!==p.iso);shownIso=p.iso;$("#dProg").textContent=done?"All done — complete training day":`${g.n} of ${g.total} done`;
   const note=$("#dNote");note.hidden=!p.note;note.textContent=p.note||"";
   const sec=(id,key)=>{const el=$(id),items=p.tasks.filter(t=>t.sec===key);el.hidden=!items.length;if(!items.length)return;
     el.querySelector("[data-list]").innerHTML=items.map(t=>taskHTML(t,s.c)).join("");
@@ -514,16 +596,53 @@ function renderDay(){
 const reduceMotion=()=>window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
 function enter(){const el=document.querySelector(".screen:not([hidden])");if(!el||reduceMotion())return;el.classList.remove("enter");void el.offsetWidth;el.classList.add("enter")}
 let swapping=false;
-function swap(fn){const cur=document.querySelector(".screen:not([hidden])");
+/* dir: "fwd" / "back" slide sideways (stepping through days); none = rise in */
+function swap(fn,dir){const cur=document.querySelector(".screen:not([hidden])");
   if(!cur||reduceMotion()){fn();return}
   if(swapping)return;swapping=true;
-  cur.classList.remove("enter");void cur.offsetWidth;cur.classList.add("leaving");
-  setTimeout(()=>{fn();cur.classList.remove("leaving");enter();swapping=false},220)}
+  document.querySelectorAll(".screen").forEach(s=>{s.classList.remove("fwd","back");if(dir)s.classList.add(dir)});
+  cur.classList.remove("enter","intro");void cur.offsetWidth;cur.classList.add("leaving");
+  setTimeout(()=>{fn();cur.classList.remove("leaving");enter();swapping=false},170)}
 function openDay(k){swap(()=>_openDay(k))}
 function goHome(push){swap(()=>_goHome(push))}
 function _openDay(k){current=k;$("#home").hidden=true;$("#day").hidden=false;renderDay();window.scrollTo(0,0);try{history.pushState({day:k},"")}catch(_){}}
 function _goHome(push){current=null;$("#day").hidden=true;$("#home").hidden=false;renderHome();window.scrollTo(0,0)}
 window.addEventListener("popstate",()=>{if(current)goHome()});
+
+/* ---------- motion helpers ---------- */
+let justDone=null,shownIso=null;
+const easeOut=t=>1-Math.pow(1-t,4);
+/* count a number up from where it was (or from 0 the first time); bump it if it changed after first paint */
+function countTo(el,to,o={}){
+  const dec=o.dec||0,suf=o.suffix||"",show=v=>(dec?Math.round(v*10)/10:Math.round(v))+suf;
+  const from=el.dataset.v===undefined?0:+el.dataset.v,first=el.dataset.v===undefined;el.dataset.v=to;
+  cancelAnimationFrame(el._raf);
+  if(from===to||reduceMotion()){el.textContent=show(to);return}
+  if(!first){el.classList.remove("bump");void el.offsetWidth;el.classList.add("bump")}
+  const dur=first?1100:700,t0=performance.now()+(first?250:0);
+  const step=now=>{const k=Math.min(1,Math.max(0,(now-t0)/dur));el.textContent=show(from+(to-from)*easeOut(k));if(k<1)el._raf=requestAnimationFrame(step)};
+  el.textContent=show(from);el._raf=requestAnimationFrame(step);
+}
+/* set a progress bar; fromZero refills it from empty (opening a new day) */
+function fillBar(el,pct,fromZero){
+  if(fromZero&&!reduceMotion()){el.style.transition="none";el.style.width="0";void el.offsetWidth;el.style.transition=""}
+  el.style.width=pct+"%";
+}
+/* a small burst of hearts from an element, for a finished day */
+function burst(from){
+  if(reduceMotion()||!from||!from.animate)return;
+  const r=from.getBoundingClientRect(),x=r.left+r.width*Math.min(1,parseFloat(from.style.width)/100||1),y=r.top+r.height/2;
+  for(let i=0;i<12;i++){
+    const h=document.createElement("i");h.className="burst"+(i%3===0?" pk":"");document.body.appendChild(h);
+    const a=-Math.PI/2+(Math.random()-.5)*Math.PI*1.3,d=60+Math.random()*70,s=.55+Math.random()*.7,rot=(Math.random()-.5)*70;
+    const dx=Math.cos(a)*d,dy=Math.sin(a)*d;
+    h.animate([
+      {transform:`translate(${x-8}px,${y-8}px) scale(0)`,opacity:1},
+      {transform:`translate(${x-8+dx}px,${y-8+dy}px) scale(${s}) rotate(${rot}deg)`,opacity:1,offset:.55},
+      {transform:`translate(${x-8+dx*1.1}px,${y-8+dy+40}px) scale(${s*.8}) rotate(${rot*1.5}deg)`,opacity:0}
+    ],{duration:900+Math.random()*300,easing:"cubic-bezier(.2,.8,.3,1)",delay:i*14,fill:"backwards"}).onfinish=()=>h.remove();
+  }
+}
 
 /* ---------- saving ---------- */
 function saveLocal(){try{localStorage.setItem("half-log-v2",JSON.stringify(state))}catch(_){}}
@@ -539,16 +658,18 @@ let toastT;function toast(t){const el=$("#toast");el.textContent=t;el.classList.
 $("#grid").addEventListener("click",e=>{const b=e.target.closest("button.cell");if(b)openDay(b.dataset.iso)});
 $("#todayCard").addEventListener("click",()=>{const k=$("#todayCard").dataset.iso;if(k)openDay(k)});
 $("#back").addEventListener("click",()=>{goHome()});
-$("#todayBtn").addEventListener("click",()=>swap(()=>{current=todayIso();renderDay();window.scrollTo(0,0)}));
-$("#prevDay").addEventListener("click",()=>{const i=P.findIndex(p=>p.iso===current);if(i>0)swap(()=>{current=P[i-1].iso;renderDay();window.scrollTo(0,0)})});
-$("#nextDay").addEventListener("click",()=>{const i=P.findIndex(p=>p.iso===current);if(i<P.length-1)swap(()=>{current=P[i+1].iso;renderDay();window.scrollTo(0,0)})});
+$("#todayBtn").addEventListener("click",()=>swap(()=>{current=todayIso();renderDay();window.scrollTo(0,0)},todayIso()>current?"fwd":"back"));
+$("#prevDay").addEventListener("click",()=>{const i=P.findIndex(p=>p.iso===current);if(i>0)swap(()=>{current=P[i-1].iso;renderDay();window.scrollTo(0,0)},"back")});
+$("#nextDay").addEventListener("click",()=>{const i=P.findIndex(p=>p.iso===current);if(i<P.length-1)swap(()=>{current=P[i+1].iso;renderDay();window.scrollTo(0,0)},"fwd")});
 $("#day").addEventListener("click",e=>{
   const p=byIso[current];if(!p)return;const s=S(current),was=complete(p);
   const b=e.target.closest("[data-task]");if(!b)return;const id=b.dataset.task;
   const nc={...(s.c||{})};if(nc[id])delete nc[id];else nc[id]=true;s.c=nc;
   if(id==="r-run"&&s.c[id]&&!s.miles&&p.mi)s.miles=String(p.mi);
   renderDay();save(current);
-  if(!was&&complete(p)){toast(p.race?"Half marathon done. Congratulations!":"Training day complete ✓");if(navigator.vibrate)try{navigator.vibrate(40)}catch(_){}}
+  const nb=$(`#day [data-task="${id}"]`);if(nb&&!reduceMotion())nb.classList.add("just");
+  if(!was&&complete(p)){justDone=p.iso;const ok=$("#dChips .chip.ok");if(ok)ok.classList.add("fresh");burst($("#dBar"));
+    toast(p.race?"Half marathon done. Congratulations!":"Training day complete ✓");if(navigator.vibrate)try{navigator.vibrate(40)}catch(_){}}
 });
 /* save the run log and notes on every keystroke (iPhone doesn't always fire "change"), and refresh the pace live */
 function logField(id,e){
@@ -597,7 +718,11 @@ function fmtTimeInput(v){
 }
 /* ---------- boot ---------- */
 try{const saved=JSON.parse(localStorage.getItem("half-log-v2")||"{}");Object.assign(state,saved)}catch(_){}
-renderHome();enter();
+/* first open: stagger the home screen in */
+if(!reduceMotion()){const home=$("#home");home.classList.add("intro");
+  [...home.querySelectorAll(".hero>*:not(.sky)"),$(".weekline"),$("#todayCard"),$(".stats"),$(".legend"),$("#sync")].forEach((el,i)=>el.style.setProperty("--i",i));
+  setTimeout(()=>home.classList.remove("intro"),2000)}
+renderHome();
 if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{})})}
 </script>
 </body>
